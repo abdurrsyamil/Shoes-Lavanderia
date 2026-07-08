@@ -1,0 +1,6 @@
+{
+  "name": "Shoes Lavandería",
+  "description": "Website e-commerce multi-page premium untuk Shoes Lavandería dengan integrasi Supabase dan desain berbasis tipografi elegan.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
