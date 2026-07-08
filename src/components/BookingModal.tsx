@@ -369,15 +369,17 @@ Mohon segera dikonfirmasi ya Asesor, terima kasih!`;
         <div className="p-6 overflow-y-auto space-y-6 flex-1 text-sm custom-scrollbar">
           
           {/* SERVICE SUMMARY */}
-          <div className="bg-neutral-900/40 border border-neutral-900 rounded-2xl p-4 flex items-center justify-between">
-            <div className="space-y-1">
-              <span className="text-[11px] text-amber-500 font-medium block">Layanan Terpilih</span>
-              <h3 className="text-white font-semibold text-sm">{service.name}</h3>
-              <p className="text-xs text-neutral-400 line-clamp-1">{service.description}</p>
+          <div className="bg-neutral-950 border border-neutral-850 rounded-2xl p-4.5 flex items-center justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] text-amber-500 font-bold tracking-widest uppercase block mb-1">Layanan Terpilih</span>
+              <h3 className="text-white font-bold text-sm sm:text-base uppercase tracking-wider truncate">{service.name}</h3>
+              <p className="text-xs text-neutral-400 line-clamp-1 font-sans mt-0.5">{service.description}</p>
             </div>
-            <div className="text-right space-y-1">
-              <span className="text-[11px] text-neutral-400 font-medium block">Biaya Jasa</span>
-              <span className="text-amber-500 text-lg font-bold">{service.price_value}</span>
+            <div className="text-right shrink-0">
+              <span className="text-[10px] text-neutral-500 font-bold tracking-widest uppercase block">Biaya Jasa</span>
+              <span className="text-amber-500 text-sm sm:text-base font-mono font-bold tracking-tight whitespace-nowrap block mt-1.5">
+                {service.price_value}
+              </span>
             </div>
           </div>
 
@@ -534,7 +536,7 @@ Mohon segera dikonfirmasi ya Asesor, terima kasih!`;
                     placeholder={
                       addressMethod === 'gps'
                         ? "Mendeteksi koordinat lokasi GPS Anda..."
-                        : "Tuliskan alamat rumah lengkap Anda di sini... (Alamat akan otomatis dicarikan rute motornya)"
+                        : "Tuliskan alamat lengkap rumah Anda di sini..."
                     }
                     rows={2}
                     className={`w-full bg-neutral-950 border border-neutral-850 rounded-xl p-3 text-neutral-100 placeholder-neutral-600 focus:outline-none focus:border-amber-500 transition-colors resize-none text-xs leading-relaxed font-sans ${
@@ -642,19 +644,19 @@ Mohon segera dikonfirmasi ya Asesor, terima kasih!`;
 
           {/* BILLING CALCULATION */}
           <div className="border-t border-neutral-900 pt-4 space-y-2 text-xs text-neutral-300 font-sans">
-            <div className="flex justify-between">
-              <span>Biaya Jasa Cuci ({service.name}):</span>
-              <span className="font-medium text-white">{service.price_value}</span>
+            <div className="flex justify-between items-center gap-2">
+              <span className="truncate">Biaya Jasa Cuci ({service.name}):</span>
+              <span className="font-medium text-white shrink-0 whitespace-nowrap">{service.price_value}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Biaya Antar-Jemput Kurir Motor ({distance} km):</span>
-              <span className={isAntarJemputFree ? 'text-emerald-400 font-semibold' : 'text-white font-medium'}>
+            <div className="flex justify-between items-center gap-2">
+              <span className="truncate">Biaya Antar-Jemput Kurir Motor ({distance} km):</span>
+              <span className={isAntarJemputFree ? 'text-emerald-400 font-semibold shrink-0 whitespace-nowrap' : 'text-white font-medium shrink-0 whitespace-nowrap'}>
                 {isAntarJemputFree ? 'Gratis' : `Rp ${deliveryFee.toLocaleString('id-ID')}`}
               </span>
             </div>
-            <div className="border-t border-neutral-900 pt-2.5 flex justify-between text-sm font-bold text-white">
-              <span>Total Estimasi Pembayaran:</span>
-              <span className="text-amber-500 text-base font-extrabold">
+            <div className="border-t border-neutral-900 pt-2.5 flex justify-between items-center gap-2 text-sm font-bold text-white">
+              <span className="truncate">Total Estimasi Pembayaran:</span>
+              <span className="text-amber-500 text-base font-extrabold shrink-0 whitespace-nowrap font-mono">
                 Rp {(parseInt(service.price_value.replace(/\D/g, '')) + deliveryFee).toLocaleString('id-ID')}
               </span>
             </div>

@@ -19,12 +19,92 @@ const ai = new GoogleGenAI({
   }
 });
 
-// API chat endpoint for the shoes laundry chatbot
+// Helper function to handle robust generation with fallback models and retry logic
+async function generateWithFallback(
+  contents: any,
+  systemInstruction: string,
+  extraConfig: any = {}
+) {
+  // Use recommended stable models in sequence
+  const modelsToTry = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-3.5-flash'
+  ];
+
+  let lastError = null;
+
+  for (const modelName of modelsToTry) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        console.log(`[Gemini API] Attempting model: ${modelName} (Attempt ${attempt}/2)`);
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.7,
+            ...extraConfig
+          },
+        });
+        if (response && response.text) {
+          console.log(`[Gemini API] Successfully generated content using model: ${modelName}`);
+          return response;
+        }
+      } catch (err: any) {
+        lastError = err;
+        const errStr = err?.message || String(err);
+        console.warn(`[Gemini API] Model ${modelName} failed on attempt ${attempt}:`, errStr);
+        if (errStr.includes('404') || errStr.toLowerCase().includes('not found')) {
+          break; // Try the next model immediately
+        }
+        if (attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+      }
+    }
+  }
+
+  throw lastError || new Error('Semua model AI sedang sibuk. Silakan coba sesaat lagi.');
+}
+
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, services } = req.body;
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
+    }
+
+    let servicesListString = `   - Fast Cleaning: Rp 30.000 (Pembersihan cepat bagian luar, selesai 15-30 menit)
+   - Deep Cleaning: Rp 50.000 (Pembersihan mendalam secara menyeluruh untuk semua bagian luar & dalam)
+   - Premium Treatment: Rp 90.000 (Perawatan mendalam untuk sepatu berbahan khusus seperti Suede, Leather/Kulit, Nubuck, Canvas premium)
+   - Unyellowing: Rp 100.000 (Proses khusus untuk menghilangkan warna kuning oksidasi pada midsole)
+   - Repaint: Rp 185.000 (Restorasi warna pudar atau kustomisasi warna baru)
+   - Antar Jemput: GRATIS layanan kurir penjemputan & pengantaran khusus hingga radius 8 KM!`;
+
+    if (Array.isArray(services) && services.length > 0) {
+      try {
+        servicesListString = services
+          .filter(s => s && typeof s === 'object')
+          .map(s => {
+            let name = 'Layanan';
+            if (s.name && typeof s.name === 'string') {
+              name = s.name.split(/\s+/).map((w: string) => {
+                if (!w) return '';
+                return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+              }).filter(Boolean).join(' ');
+            } else if (s.name) {
+              name = String(s.name);
+            }
+            const price = s.price_value || 'Hubungi Kami';
+            const desc = s.description || '';
+            return `   - ${name}: ${price}${desc ? ` (${desc})` : ''}`;
+          })
+          .join('\n');
+      } catch (err: any) {
+        console.error('Error formatting services in chat:', err);
+      }
     }
 
     const systemInstruction = `You are Asesor, the highly skilled and professional admin and shoe care consultant at "Shoes Lavandería" (a premium shoes laundry service in Indonesia with a Spanish touch).
@@ -34,12 +114,7 @@ Answer questions accurately and directly, like a Google Search or a highly knowl
 
 Context/Information about Shoes Lavandería:
 1. Layanan Kami (Our Services) & Prices:
-   - Fast Cleaning: Rp 30.000 (Pembersihan cepat bagian luar, selesai 15-30 menit)
-   - Deep Cleaning: Rp 50.000 (Pembersihan mendalam secara menyeluruh untuk semua bagian luar & dalam)
-   - Premium Treatment: Rp 90.000 (Perawatan mendalam untuk sepatu berbahan khusus seperti Suede, Leather/Kulit, Nubuck, Canvas premium)
-   - Unyellowing: Rp 100.000 (Proses khusus untuk menghilangkan warna kuning oksidasi pada midsole)
-   - Repaint: Rp 185.000 (Restorasi warna pudar atau kustomisasi warna baru)
-   - Antar Jemput: GRATIS layanan kurir penjemputan & pengantaran khusus hingga radius 8 KM!
+${servicesListString}
 
 2. Komitmen & Garansi (Our Commitment & Guarantee):
    - Kami berkomitmen penuh: "BAWA SEPATU KOTORMU, BAWA PULANG KEPERCAYAAN DIRIMU."
@@ -65,15 +140,8 @@ Context/Information about Shoes Lavandería:
 Ketika pengguna menanyakan keluhan sepatu (misalnya noda, bau, bahan suede basah, outsole menguning, dsb.), jawablah dengan memberikan penjelasan sains/praktis yang mendalam (seperti "kenapa sepatu basah jika dipakai bisa bau? Karena kelembapan tinggi memicu pertumbuhan bakteri Brevibacterium, yang memakan sel kulit mati kaki dan menghasilkan gas asam belerang. Cara mengatasinya adalah dengan pengeringan sirkulasi udara yang baik dan teknik cuci antibakteri mendalam di Shoes Lavandería") dan jelaskan bagaimana Shoes Lavandería bisa mengatasinya.
 Jawab dengan ramah, informatif, dan ringkas namun sangat berkualitas agar pengguna merasa tercerahkan dan tertarik untuk menggunakan jasa kita!`;
 
-    // Process chat using generateContent
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: message,
-      config: {
-        systemInstruction,
-        temperature: 0.7,
-      },
-    });
+    // Process chat using the robust generateWithFallback helper
+    const response = await generateWithFallback(message, systemInstruction);
 
     res.json({ reply: response.text });
   } catch (error: any) {
@@ -490,11 +558,10 @@ Analyze the user's idea and generate a structured JSON object response with 4 ma
 
 All Markdown fields must be in Bahasa Indonesia (Indonesian). Make sure the content is highly detailed, specific, fully thought out, and highly professional.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: `Gagasan Fitur / Bisnis baru untuk dianalisis: "${idea}"`,
-      config: {
-        systemInstruction,
+    const response = await generateWithFallback(
+      `Gagasan Fitur / Bisnis baru untuk dianalisis: "${idea}"`,
+      systemInstruction,
+      {
         responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
@@ -525,10 +592,9 @@ All Markdown fields must be in Bahasa Indonesia (Indonesian). Make sure the cont
             }
           },
           required: ["businessRequirements", "userStories", "functionalSpec", "wireframeDesign"]
-        },
-        temperature: 0.7,
+        }
       }
-    });
+    );
 
     res.json(JSON.parse(response.text.trim()));
   } catch (error: any) {

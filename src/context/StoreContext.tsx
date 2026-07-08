@@ -519,11 +519,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: text, services }),
       });
 
       if (!response.ok) {
-        throw new Error('Gagal mendapatkan respon dari asisten');
+        const errorJson = await response.json().catch(() => ({}));
+        throw new Error(errorJson.error || 'Gagal mendapatkan respon dari asisten');
       }
 
       const data = await response.json();
@@ -533,13 +534,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const filtered = prev.filter(m => m.id !== 'typing');
         return [...filtered, { id: botMsgId, text: botReply, isBot: true }];
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Chat API Error:', error);
+      const errorMsg = error.message || String(error);
       setChatbotMessages(prev => {
         const filtered = prev.filter(m => m.id !== 'typing');
         return [...filtered, { 
           id: botMsgId, 
-          text: "¡Lo siento! Terjadi kendala koneksi dengan Asesor. Silakan pastikan koneksi internet Anda lancar atau konsultasi langsung melalui WhatsApp kami di **+62 857 7690 9036**.", 
+          text: `¡Lo siento! Terjadi kendala dengan Asesor: ${errorMsg}. Silakan pastikan koneksi internet Anda lancar atau konsultasi langsung melalui WhatsApp kami di **+62 859 2029 2879**.`, 
           isBot: true 
         }];
       });
