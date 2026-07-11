@@ -1,20 +1,21 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Shoes Lavanderia
 
-# Run and deploy your AI Studio app
+Aplikasi web interaktif untuk manajemen layanan cuci sepatu (shoes laundry). Proyek ini dibangun untuk memberikan pengalaman pengguna yang responsif dan efisien.
 
-This contains everything you need to run your app locally.
+## Tech Stack
+- Environment: Node.js
+- Build Tool: Vite
+- Language: TypeScript
+- Backend / Database: Supabase
+- Deployment: Vercel
 
-View your app in AI Studio: https://ai.studio/apps/748b3ee0-c734-4989-bb70-5526808d337d
+## Live Demo
+Aplikasi ini telah di-deploy dan dapat diakses melalui: [Shoes Lavanderia - Vercel](https://shoes-lavanderia.vercel.app/)
 
-## Run Locally
+## Cara Menjalankan Secara Lokal (Run Locally)
 
-**Prerequisites:**  Node.js
+Pastikan Anda sudah menginstal Node.js di sistem Anda.
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1. Clone repositori ini:
+   ```bash
+   git clone [https://github.com/abdurrsyamil/Shoes-Lavanderia.git](https://github.com/abdurrsyamil/Shoes-Lavanderia.git)
